@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { TitleBar } from './components/layout/TitleBar';
 import { Sidebar, type ViewKey } from './components/layout/Sidebar';
 import { ToastViewport } from './components/ui/Toast';
+import { TooltipProvider } from './components/ui/Tooltip';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Dashboard } from './pages/Dashboard';
 import { Servers } from './pages/Servers';
@@ -25,10 +26,10 @@ export default function App() {
   const appendLog = useStore(s => s.appendLog);
   const setSettings = useStore(s => s.setSettings);
 
-  const navigate = (next: ViewKey) => {
+  const navigate = useCallback((next: ViewKey) => {
     setView(next);
     setVisited(prev => (prev.has(next) ? prev : new Set([...prev, next])));
-  };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,6 +66,7 @@ export default function App() {
   }, [setSystemStats, setServers, setCustomServers, appendLog, setSettings]);
 
   return (
+    <TooltipProvider>
     <div className="flex h-screen w-screen flex-col text-fg">
       <TitleBar />
       <div className="flex flex-1 overflow-hidden">
@@ -104,6 +106,7 @@ export default function App() {
       </div>
       <ToastViewport />
     </div>
+    </TooltipProvider>
   );
 }
 
