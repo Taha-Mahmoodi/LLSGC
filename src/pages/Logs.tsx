@@ -171,7 +171,10 @@ function LogActions({
       <Button
         size="sm"
         variant="ghost"
-        onClick={() => callOk(api.clearLogs(selected.id), 'Logs cleared')}
+        onClick={async () => {
+          const ok = await callOk(api.clearLogs(selected.id), 'Logs cleared');
+          if (ok !== null) useStore.getState().setLogs(selected.id, []);
+        }}
       >
         <Trash2 className="h-3.5 w-3.5" />
         Clear

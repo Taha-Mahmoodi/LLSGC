@@ -100,6 +100,9 @@ export const useStore = create<AppState>((set, get) => ({
 
   appendLog: line =>
     set(state => {
+      if (!line || typeof line.customId !== 'string' || !line.customId) {
+        return state;
+      }
       const cur = state.logs[line.customId] ?? [];
       const next = [...cur, line];
       if (next.length > 1000) next.splice(0, next.length - 1000);

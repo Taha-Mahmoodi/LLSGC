@@ -60,6 +60,23 @@ function createWindow() {
     mainWindow.loadFile(path.join(RENDERER_DIST, 'index.html'));
   }
 
+  // Allow toggling DevTools in production for self-debugging.
+  mainWindow.webContents.on('before-input-event', (_event, input) => {
+    if (input.type !== 'keyDown') return;
+    const key = input.key.toLowerCase();
+    const toggle =
+      key === 'f12' ||
+      (input.control && input.shift && key === 'i') ||
+      (input.meta && input.alt && key === 'i');
+    if (toggle && mainWindow) {
+      if (mainWindow.webContents.isDevToolsOpened()) {
+        mainWindow.webContents.closeDevTools();
+      } else {
+        mainWindow.webContents.openDevTools({ mode: 'detach' });
+      }
+    }
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });

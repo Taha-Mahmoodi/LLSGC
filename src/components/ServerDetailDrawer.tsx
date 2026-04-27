@@ -48,17 +48,24 @@ export function ServerDetailDrawer({
   }, [server?.pid]);
 
   return (
-    <AnimatePresence>
-      {server && (
-        <>
+    <>
+      <AnimatePresence>
+        {server && (
           <motion.div
+            key="server-drawer-backdrop"
             className="absolute inset-0 z-10 bg-black/40 backdrop-blur-xs"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
           />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {server && (
           <motion.aside
+            key="server-drawer"
             className="absolute right-0 top-0 z-20 flex h-full w-[420px] flex-col border-l border-border bg-bg-elev shadow-glow"
             initial={{ x: 420 }}
             animate={{ x: 0 }}
@@ -193,9 +200,9 @@ export function ServerDetailDrawer({
               </button>
             </div>
           </motion.aside>
-        </>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 

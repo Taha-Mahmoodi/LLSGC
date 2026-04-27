@@ -152,7 +152,6 @@ class CustomManager extends EventEmitter {
 
   clearLogs(id: string) {
     this.logs.set(id, []);
-    this.emit('log', { id, logs: [] });
   }
 
   autoStartAll() {
