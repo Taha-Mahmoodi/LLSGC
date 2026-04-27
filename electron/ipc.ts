@@ -230,7 +230,7 @@ function scheduleTick(getWindow: () => BrowserWindow | null) {
   tickHandle = setTimeout(async () => {
     try {
       const win = getWindow();
-      if (win && !win.isDestroyed()) {
+      if (win && !win.isDestroyed() && !win.isMinimized()) {
         const stats = getSystemStats();
         win.webContents.send(IPC.systemTick, stats);
         const servers = await collectServers();
