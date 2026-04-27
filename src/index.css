@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Dark theme — default */
+    --bg-base: 10 11 15;
+    --bg-elev: 16 18 24;
+    --bg-panel: 22 24 32;
+    --fg: 235 238 245;
+    --fg-muted: 162 168 182;
+    --fg-subtle: 116 122 138;
+    --border: 38 42 54;
+    --border-strong: 60 66 82;
+    --accent: 110 168 254;
+    --accent-fg: 8 12 24;
+    --ok: 64 196 132;
+    --warn: 240 184 88;
+    --err: 240 96 96;
+  }
+
+  .light {
+    --bg-base: 246 247 250;
+    --bg-elev: 255 255 255;
+    --bg-panel: 252 252 254;
+    --fg: 24 28 36;
+    --fg-muted: 92 98 112;
+    --fg-subtle: 142 150 166;
+    --border: 222 226 232;
+    --border-strong: 200 206 216;
+    --accent: 60 110 220;
+    --accent-fg: 255 255 255;
+    --ok: 34 154 88;
+    --warn: 196 130 24;
+    --err: 200 60 60;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 0% 0%, rgb(var(--accent) / 0.06), transparent 35%),
+      radial-gradient(circle at 100% 100%, rgb(var(--accent) / 0.03), transparent 40%),
+      rgb(var(--bg-base));
+  }
+
+  *::selection {
+    background: rgb(var(--accent) / 0.4);
+    color: rgb(var(--fg));
+  }
+
+  /* Scrollbar */
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: rgb(var(--border-strong) / 0.6);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--border-strong));
+    background-clip: content-box;
+  }
+
+  button {
+    font-family: inherit;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-xl bg-bg-elev border border-border;
+  }
+
+  .glass {
+    background: rgb(var(--bg-elev) / 0.7);
+    backdrop-filter: saturate(140%) blur(14px);
+    border: 1px solid rgb(var(--border) / 0.8);
+  }
+
+  .stat-tile {
+    @apply panel p-4 transition hover:border-border-strong;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium border;
+  }
+
+  .pill-running {
+    background: rgb(var(--ok) / 0.12);
+    color: rgb(var(--ok));
+    border-color: rgb(var(--ok) / 0.3);
+  }
+  .pill-stopped {
+    background: rgb(var(--fg-subtle) / 0.12);
+    color: rgb(var(--fg-muted));
+    border-color: rgb(var(--border));
+  }
+  .pill-crashed {
+    background: rgb(var(--err) / 0.12);
+    color: rgb(var(--err));
+    border-color: rgb(var(--err) / 0.3);
+  }
+  .pill-warn {
+    background: rgb(var(--warn) / 0.12);
+    color: rgb(var(--warn));
+    border-color: rgb(var(--warn) / 0.3);
+  }
+
+  .row-action {
+    @apply h-8 w-8 inline-flex items-center justify-center rounded-md text-fg-muted hover:text-fg hover:bg-bg-panel transition;
+  }
+
+  .input-base {
+    @apply w-full rounded-md bg-bg-panel border border-border px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:outline-none focus:border-accent transition;
+  }
+
+  .titlebar-drag {
+    -webkit-app-region: drag;
+  }
+  .titlebar-no-drag {
+    -webkit-app-region: no-drag;
+  }
+}
+
+.fade-mask-bottom {
+  mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+}
