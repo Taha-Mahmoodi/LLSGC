@@ -22,6 +22,8 @@ import {
   shortenCommand,
 } from '../lib/utils';
 
+const EMPTY_HISTORY: number[] = [];
+
 export function ServerDetailDrawer({
   server,
   onClose,
@@ -30,8 +32,9 @@ export function ServerDetailDrawer({
   onClose: () => void;
 }) {
   const [details, setDetails] = useState<ProcessDetails | null>(null);
+  const pid = server?.pid;
   const history = useStore(s =>
-    server ? s.serverHistory.get(server.pid) ?? [] : [],
+    pid != null ? s.serverHistory.get(pid) ?? EMPTY_HISTORY : EMPTY_HISTORY,
   );
 
   useEffect(() => {
