@@ -1,0 +1,125 @@
+name: Release Windows
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g. 0.2.0). Leave blank for a development build.'
+        required: false
+      publish:
+        description: 'Publish to GitHub Releases (creates a tag if needed).'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-windows:
+    name: Build Windows installer
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache electron-builder downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/AppData/Local/electron/Cache
+            ~/AppData/Local/electron-builder/Cache
+          key: electron-builder-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            electron-builder-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            IS_RELEASE=true
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+          elif [[ -n "${{ github.event.inputs.version }}" ]]; then
+            VERSION="${{ github.event.inputs.version }}"
+            IS_RELEASE="${{ github.event.inputs.publish }}"
+            TAG_NAME="v${VERSION}"
+          else
+            CUR=$(node -p "require('./package.json').version")
+            VERSION="${CUR}-dev.${GITHUB_SHA::7}"
+            IS_RELEASE=false
+            TAG_NAME=""
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "is_release=${IS_RELEASE}" >> "$GITHUB_OUTPUT"
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Build version::${VERSION} (release=${IS_RELEASE})"
+
+      - name: Sync package.json version
+        shell: bash
+        run: |
+          npm version "${{ steps.version.outputs.version }}" --no-git-tag-version --allow-same-version
+
+      - name: Build renderer + main
+        run: npm run build
+
+      - name: Build Windows installer (NSIS + portable)
+        run: npx electron-builder --win --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: List artifacts
+        shell: bash
+        run: |
+          echo "=== release/ contents ==="
+          ls -la release/ || true
+          echo "=== exe files ==="
+          find release -maxdepth 2 -name '*.exe' -o -name '*.yml' -o -name '*.blockmap' 2>/dev/null || true
+
+      - name: Upload artifacts (always)
+        uses: actions/upload-artifact@v4
+        with:
+          name: LLSGC-Windows-${{ steps.version.outputs.version }}
+          path: |
+            release/*.exe
+            release/*.exe.blockmap
+            release/latest.yml
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release
+        if: steps.version.outputs.is_release == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag_name }}
+          name: LLSGC ${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: false
+          files: |
+            release/*.exe
+            release/*.exe.blockmap
+            release/latest.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

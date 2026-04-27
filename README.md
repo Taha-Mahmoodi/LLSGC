@@ -1,8 +1,21 @@
 # LLSGC — Live Local Servers GUI Controller
 
+[![Release](https://img.shields.io/github/v/release/Taha-Mahmoodi/LLSGC?include_prereleases&label=release)](https://github.com/Taha-Mahmoodi/LLSGC/releases/latest)
+[![CI](https://github.com/Taha-Mahmoodi/LLSGC/actions/workflows/ci.yml/badge.svg)](https://github.com/Taha-Mahmoodi/LLSGC/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+
 A desktop control panel for every server running on your machine. See what's listening, how much CPU/memory each process is taking, how long it's been up — and stop, restart, open in browser, or block its port from a single window.
 
 Built with Electron, React, TypeScript, Tailwind. Open source under MIT.
+
+## Download
+
+Grab the latest Windows installer or portable build from **[GitHub Releases](https://github.com/Taha-Mahmoodi/LLSGC/releases/latest)**.
+
+- `LLSGC-Setup-X.Y.Z.exe` — NSIS installer (recommended). Lets you choose the install directory; installs per-user.
+- `LLSGC-X.Y.Z-portable.exe` — single-file portable build. No install, runs from anywhere.
+
+> The installers are **unsigned**. Windows SmartScreen will show a "publisher unknown" warning the first time you run it — click *More info → Run anyway*.
 
 ## Features
 
@@ -123,6 +136,30 @@ npm run package -- --linux
 ```
 
 Output goes to `release/`.
+
+## Releases
+
+Windows installers are built and published automatically by GitHub Actions:
+
+- **CI** ([`.github/workflows/ci.yml`](./.github/workflows/ci.yml)) — typecheck + build on every push to `main` and every PR.
+- **Release** ([`.github/workflows/release.yml`](./.github/workflows/release.yml)) — builds the Windows `.exe` on `windows-latest`, uploads it as an artifact, and (when triggered by a tag) publishes a GitHub Release with `generate_release_notes`.
+
+To cut a new release:
+
+```bash
+# Bump version
+npm version 0.2.0 --no-git-tag-version
+git commit -am "chore: bump to 0.2.0"
+git push
+
+# Tag and push — this triggers the release workflow
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+The workflow extracts the version from the tag, syncs `package.json`, builds the NSIS installer + portable exe, and publishes them to the [Releases](https://github.com/Taha-Mahmoodi/LLSGC/releases) page within ~5 minutes.
+
+You can also trigger a build manually from the **Actions → Release Windows → Run workflow** menu — useful for a development build (uploaded as a workflow artifact, not a release) or for re-publishing without a new tag.
 
 ## Permissions
 
