@@ -1,6 +1,6 @@
 {
   "name": "llsgc",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "description": "Live Local Servers GUI Controller — full control over local dev servers, ports, and firewall.",
   "author": {
@@ -12,6 +12,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.node.json && tsc -p tsconfig.json && vite build",
+    "build:server": "node scripts/build-server.mjs",
+    "start:server": "node dist/server/index.js",
     "preview": "vite preview",
     "package": "npm run build && electron-builder",
     "package:win": "npm run build && electron-builder --win",
@@ -28,18 +30,23 @@
     "@radix-ui/react-switch": "^1.1.3",
     "@radix-ui/react-tabs": "^1.1.3",
     "@radix-ui/react-tooltip": "^1.1.8",
+    "@types/express": "^5.0.0",
     "@types/node": "^22.10.7",
     "@types/pidusage": "^2.0.5",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
+    "@types/ws": "^8.5.13",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "esbuild": "^0.24.2",
     "electron": "^33.3.1",
     "electron-builder": "^25.1.8",
+    "express": "^4.21.2",
     "framer-motion": "^11.18.2",
     "lucide-react": "^0.469.0",
+    "open": "^10.1.0",
     "postcss": "^8.5.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -50,6 +57,7 @@
     "vite": "^5.4.14",
     "vite-plugin-electron": "^0.29.0",
     "vite-plugin-electron-renderer": "^0.14.6",
+    "ws": "^8.18.0",
     "zustand": "^5.0.3"
   },
   "build": {

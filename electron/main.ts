@@ -2,7 +2,11 @@ import { BrowserWindow, app, nativeTheme, screen } from 'electron';
 import path from 'node:path';
 import { registerIpcHandlers, startTickLoop, stopTickLoop } from './ipc';
 import { customManager } from './services/custom-manager';
-import { store } from './services/store';
+import { initStore, store } from './services/store';
+
+// Point the shared store at Electron's userData dir before any other
+// service runs (some load lazily via require() at first tick).
+initStore(app.getPath('userData'));
 
 process.env.APP_ROOT = path.join(__dirname, '..');
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL'];

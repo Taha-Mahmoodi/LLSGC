@@ -10,12 +10,33 @@ Built with Electron, React, TypeScript, Tailwind. Open source under MIT.
 
 ## Download
 
-Grab the latest Windows installer or portable build from **[GitHub Releases](https://github.com/Taha-Mahmoodi/LLSGC/releases/latest)**.
+Three flavours — same control panel in all three. Grab them from **[GitHub Releases](https://github.com/Taha-Mahmoodi/LLSGC/releases/latest)**.
 
-- `LLSGC-Setup-X.Y.Z.exe` — NSIS installer (recommended). Lets you choose the install directory; installs per-user.
-- `LLSGC-X.Y.Z-portable.exe` — single-file portable build. No install, runs from anywhere.
+| File | Size | Use this if you want… |
+|---|---|---|
+| `LLSGC-Setup-X.Y.Z.exe` | ~65 MB | …a normal Windows app: installer, Start-menu shortcut, uninstaller. |
+| `LLSGC-X.Y.Z-portable.exe` | ~64 MB | …the same desktop app but no install — runs from anywhere. |
+| `LLSGC-X.Y.Z-lite.zip` | **~1 MB** | …a **tiny** download that uses the Node you already have. Same UI, runs in your browser at `http://localhost:47291`. |
 
-> The installers are **unsigned**. Windows SmartScreen will show a "publisher unknown" warning the first time you run it — click *More info → Run anyway*.
+The first two are full Electron desktop apps. The lite zip is a Node-based local agent: ~1 MB to download, requires Node 20+ already installed on your machine. Programmers tend to prefer it; everyone else is better off with the desktop installer.
+
+> The installers are **unsigned**. Windows SmartScreen will show a "publisher unknown" warning the first time you run them — click *More info → Run anyway*.
+
+### Running the lite zip
+
+1. Extract the zip anywhere.
+2. Double-click `llsgc-server.cmd` (Windows) or run `./llsgc-server.sh` (macOS/Linux).
+3. Your default browser opens to `http://localhost:47291`. Same UI as the desktop app.
+
+CLI flags (advanced):
+```
+--port <n>       listen on a different port (default 47291)
+--host <ip>      bind address (default 127.0.0.1)
+--no-open        do not auto-open the browser
+--no-auto-start  skip auto-starting saved launchers
+```
+
+If you'd rather have the web build as a separate npm package or a single-binary `.exe` with Node embedded, see the sibling repo **[LLSGC-server](https://github.com/Taha-Mahmoodi/LLSGC-server)**.
 
 ## Features
 

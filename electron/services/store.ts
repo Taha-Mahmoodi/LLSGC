@@ -1,6 +1,6 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
-import { app } from 'electron';
 import {
   AppSettings,
   CustomServer,
@@ -19,9 +19,42 @@ const DEFAULT_STATE: PersistedState = {
 
 let cache: PersistedState | null = null;
 let writeTimer: NodeJS.Timeout | null = null;
+let userDataDir: string | null = null;
+
+/**
+ * Initialise the store with a writable directory. Call this once on
+ * process startup (Electron main: `initStore(app.getPath('userData'))`,
+ * Node server: `initStore(<resolved path>)`).
+ *
+ * If never called, the store falls back to a sensible per-OS default,
+ * so test and dev paths still work.
+ */
+export function initStore(dir: string) {
+  userDataDir = dir;
+}
+
+function defaultDataDir(): string {
+  const override = process.env.LLSGC_HOME;
+  if (override) return override;
+  if (process.platform === 'win32') {
+    return path.join(
+      process.env.APPDATA ?? path.join(os.homedir(), 'AppData', 'Roaming'),
+      'LLSGC',
+    );
+  }
+  if (process.platform === 'darwin') {
+    return path.join(os.homedir(), 'Library', 'Application Support', 'LLSGC');
+  }
+  const xdg = process.env.XDG_CONFIG_HOME;
+  return path.join(xdg ?? path.join(os.homedir(), '.config'), 'llsgc');
+}
+
+export function getDataDir(): string {
+  return userDataDir ?? defaultDataDir();
+}
 
 function getFilePath() {
-  const dir = app.getPath('userData');
+  const dir = userDataDir ?? defaultDataDir();
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   return path.join(dir, 'llsgc.config.json');
 }

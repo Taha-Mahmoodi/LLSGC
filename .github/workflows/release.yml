@@ -96,7 +96,7 @@ jobs:
           echo "=== exe files ==="
           find release -maxdepth 2 -name '*.exe' -o -name '*.yml' -o -name '*.blockmap' 2>/dev/null || true
 
-      - name: Upload artifacts (always — full set incl. updater files)
+      - name: Upload Electron artifacts (always — full set incl. updater files)
         uses: actions/upload-artifact@v4
         with:
           name: LLSGC-Windows-${{ steps.version.outputs.version }}
@@ -107,7 +107,84 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish GitHub Release (Setup + portable .exe only)
+      - name: Build server bundle (for lite zip)
+        run: npm run build:server
+
+      - name: Assemble lite zip (for programmers who already have Node 20+)
+        shell: bash
+        run: |
+          STAGE="release/stage/llsgc-server"
+          mkdir -p "$STAGE/client"
+          cp dist/server/index.js "$STAGE/server.js"
+          cp -R dist/. "$STAGE/client/"
+          # The renderer bundle is meant to be served at "/", so strip
+          # nothing — index.html and assets/ are the only top-level items
+          # in dist/. Exclude the server bundle which we copied above.
+          rm -f "$STAGE/client/index.js"
+
+          cat > "$STAGE/llsgc-server.cmd" <<'EOF'
+          @echo off
+          setlocal
+          where node >nul 2>nul
+          if errorlevel 1 (
+            echo.
+            echo LLSGC-server requires Node.js 20 or later.
+            echo Install from https://nodejs.org/ ^(LTS is fine^), then run this again.
+            echo Or grab the desktop installer from the Releases page if you would
+            echo rather have the bundled Electron app.
+            echo.
+            pause
+            exit /b 1
+          )
+          node "%~dp0server.js" %*
+          EOF
+
+          cat > "$STAGE/llsgc-server.sh" <<'EOF'
+          #!/usr/bin/env bash
+          set -e
+          if ! command -v node >/dev/null 2>&1; then
+            echo "LLSGC-server requires Node.js 20 or later. Install from https://nodejs.org/" >&2
+            exit 1
+          fi
+          DIR="$(cd "$(dirname "$0")" && pwd)"
+          exec node "$DIR/server.js" "$@"
+          EOF
+          chmod +x "$STAGE/llsgc-server.sh"
+
+          cat > "$STAGE/README.txt" <<'EOF'
+          LLSGC — Live Local Servers (lite distribution)
+
+          Same control panel as the LLSGC desktop app, but runs as a local
+          Node service and opens in your browser. Tiny because Node is not
+          bundled — install Node 20+ from https://nodejs.org/ first.
+
+          Run:
+            Windows : double-click llsgc-server.cmd
+            macOS / Linux : ./llsgc-server.sh
+
+          Then open http://localhost:47291 in your browser (it auto-opens).
+
+          Flags:
+            --port <n>       listen on a different port (default 47291)
+            --host <ip>      bind address (default 127.0.0.1)
+            --no-open        do not auto-open the browser
+            --no-auto-start  skip auto-starting saved launchers
+          EOF
+
+          VER="${{ steps.version.outputs.version }}"
+          (cd release/stage && powershell -Command "Compress-Archive -Path 'llsgc-server' -DestinationPath '../LLSGC-${VER}-lite.zip'")
+          rm -rf release/stage
+          ls -la release/
+
+      - name: Upload lite zip artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LLSGC-lite-${{ steps.version.outputs.version }}
+          path: release/*-lite.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release (desktop .exe + lite zip)
         if: steps.version.outputs.is_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
@@ -119,5 +196,6 @@ jobs:
           fail_on_unmatched_files: false
           files: |
             release/*.exe
+            release/*-lite.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
