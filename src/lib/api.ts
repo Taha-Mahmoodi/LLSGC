@@ -1,7 +1,24 @@
 import type { IpcResult } from '../../shared/types';
+import type { LLSGCApi } from '../types/window';
+import { browserApi, isElectron } from './browser-api';
 import { useStore } from './store';
 
-export const api = window.llsgc;
+/**
+ * Single API surface that works in both runtimes:
+ *
+ *  - Electron desktop : `window.llsgc` is injected by preload.ts via
+ *    contextBridge — we use that.
+ *  - Browser (lite zip / web mode) : no preload, we fall back to
+ *    HTTP `POST /api/call` + WebSocket `/ws` (browserApi).
+ *
+ * Components import `api` exactly the same way regardless. Same React
+ * bundle ships in both the Electron .exe and the lite zip.
+ */
+export const api: LLSGCApi = isElectron()
+  ? (window as unknown as { llsgc: LLSGCApi }).llsgc
+  : browserApi;
+
+export const isElectronEnv = isElectron;
 
 export async function call<T>(
   promise: Promise<IpcResult<T>>,
