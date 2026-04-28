@@ -1,11 +1,15 @@
 import type {
   AppSettings,
+  CommonPort,
   CustomServer,
   CustomServerInput,
   DetectedServer,
   FirewallRule,
+  HostEntryInput,
+  HostsInfo,
   IpcResult,
   LogLine,
+  PortCheckResult,
   ProcessDetails,
   SystemStats,
 } from '../../shared/types';
@@ -44,6 +48,15 @@ export interface LLSGCApi {
 
   getSettings(): Promise<IpcResult<AppSettings>>;
   updateSettings(patch: Partial<AppSettings>): Promise<IpcResult<AppSettings>>;
+
+  listHosts(): Promise<IpcResult<HostsInfo>>;
+  saveHost(input: HostEntryInput): Promise<IpcResult<any>>;
+  removeHost(id: string): Promise<IpcResult>;
+  toggleHost(id: string, enabled: boolean): Promise<IpcResult>;
+
+  checkPort(port: number): Promise<IpcResult<PortCheckResult>>;
+  checkPorts(ports: number[]): Promise<IpcResult<PortCheckResult[]>>;
+  listCommonPorts(): Promise<IpcResult<CommonPort[]>>;
 
   quit(): Promise<void>;
   minimize(): Promise<void>;

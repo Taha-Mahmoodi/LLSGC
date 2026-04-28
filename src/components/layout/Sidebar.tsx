@@ -5,6 +5,8 @@ import {
   ShieldAlert,
   ScrollText,
   Settings as SettingsIcon,
+  Globe,
+  Plug,
   type LucideIcon,
 } from 'lucide-react';
 import { useStore } from '../../lib/store';
@@ -13,8 +15,10 @@ import { cn } from '../../lib/utils';
 export type ViewKey =
   | 'dashboard'
   | 'servers'
+  | 'ports'
   | 'custom'
   | 'firewall'
+  | 'hosts'
   | 'logs'
   | 'settings';
 
@@ -39,6 +43,12 @@ const items: Array<{
     badge: c => (c.servers > 0 ? String(c.servers) : undefined),
   },
   {
+    key: 'ports',
+    label: 'Ports',
+    icon: Plug,
+    description: 'Common dev ports + free port finder',
+  },
+  {
     key: 'custom',
     label: 'Launchers',
     icon: Rocket,
@@ -51,6 +61,12 @@ const items: Array<{
     icon: ShieldAlert,
     description: 'Block / unblock ports',
     badge: c => (c.rules > 0 ? String(c.rules) : undefined),
+  },
+  {
+    key: 'hosts',
+    label: 'Hosts',
+    icon: Globe,
+    description: 'Edit hosts file',
   },
   {
     key: 'logs',

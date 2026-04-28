@@ -6,8 +6,11 @@ import {
   CustomServer,
   CustomServerInput,
   DetectedServer,
+  HostEntryInput,
+  HostsInfo,
   IpcResult,
   LogLine,
+  PortCheckResult,
   SystemStats,
 } from '../shared/types';
 import { scanListeningPorts } from './services/port-scanner';
@@ -22,6 +25,17 @@ import {
 import { getSystemStats } from './services/system-stats';
 import { customManager } from './services/custom-manager';
 import { store } from './services/store';
+import {
+  readHosts,
+  saveHostEntry,
+  removeHostEntry,
+  toggleHostEntry,
+} from './services/hosts';
+import {
+  checkPort,
+  checkPorts,
+  listCommonPorts,
+} from './services/port-check';
 
 let tickHandle: NodeJS.Timeout | null = null;
 let lastInterval = 2500;
@@ -161,6 +175,40 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null) {
     }
     return ok(next);
   });
+
+  ipcMain.handle(IPC.hostsList, async (): Promise<IpcResult<HostsInfo>> => {
+    try {
+      return ok(await readHosts());
+    } catch (err) {
+      return fail(err);
+    }
+  });
+
+  ipcMain.handle(IPC.hostsSave, async (_e, input: HostEntryInput): Promise<IpcResult<any>> => {
+    const r = await saveHostEntry(input);
+    return r.ok ? ok({ entry: r.entry }) : fail(r.error || 'Save failed');
+  });
+
+  ipcMain.handle(IPC.hostsRemove, async (_e, id: string): Promise<IpcResult> => {
+    const r = await removeHostEntry(id);
+    return r.ok ? ok() : fail(r.error || 'Remove failed');
+  });
+
+  ipcMain.handle(IPC.hostsToggle, async (_e, id: string, enabled: boolean): Promise<IpcResult> => {
+    const r = await toggleHostEntry(id, enabled);
+    return r.ok ? ok() : fail(r.error || 'Toggle failed');
+  });
+
+  ipcMain.handle(IPC.portsCheck, async (_e, port: number): Promise<IpcResult<PortCheckResult>> => {
+    return ok(await checkPort(port));
+  });
+
+  ipcMain.handle(IPC.portsCheckMany, async (_e, ports: number[]): Promise<IpcResult<PortCheckResult[]>> => {
+    if (!Array.isArray(ports)) return fail('ports must be an array');
+    return ok(await checkPorts(ports));
+  });
+
+  ipcMain.handle(IPC.portsCommon, async (): Promise<IpcResult<any>> => ok(listCommonPorts()));
 
   ipcMain.handle(IPC.appQuit, () => {
     app.quit();

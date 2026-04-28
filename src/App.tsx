@@ -6,8 +6,10 @@ import { TooltipProvider } from './components/ui/Tooltip';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Dashboard } from './pages/Dashboard';
 import { Servers } from './pages/Servers';
+import { Ports } from './pages/Ports';
 import { Custom } from './pages/Custom';
 import { Firewall } from './pages/Firewall';
+import { Hosts } from './pages/Hosts';
 import { Logs } from './pages/Logs';
 import { Settings as SettingsPage } from './pages/Settings';
 import { api } from './lib/api';
@@ -82,6 +84,11 @@ export default function App() {
               <Servers />
             </ErrorBoundary>
           </CachedPage>
+          <CachedPage active={view === 'ports'} mounted={visited.has('ports')}>
+            <ErrorBoundary scope="ports">
+              <Ports />
+            </ErrorBoundary>
+          </CachedPage>
           <CachedPage active={view === 'custom'} mounted={visited.has('custom')}>
             <ErrorBoundary scope="custom">
               <Custom />
@@ -90,6 +97,11 @@ export default function App() {
           <CachedPage active={view === 'firewall'} mounted={visited.has('firewall')}>
             <ErrorBoundary scope="firewall">
               <Firewall />
+            </ErrorBoundary>
+          </CachedPage>
+          <CachedPage active={view === 'hosts'} mounted={visited.has('hosts')}>
+            <ErrorBoundary scope="hosts">
+              <Hosts />
             </ErrorBoundary>
           </CachedPage>
           <CachedPage active={view === 'logs'} mounted={visited.has('logs')}>

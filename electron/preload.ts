@@ -46,6 +46,17 @@ const api = {
   getSettings: () => invoke(IPC.settingsGet),
   updateSettings: (patch: any) => invoke(IPC.settingsUpdate, patch),
 
+  // Hosts file
+  listHosts: () => invoke(IPC.hostsList),
+  saveHost: (input: any) => invoke(IPC.hostsSave, input),
+  removeHost: (id: string) => invoke(IPC.hostsRemove, id),
+  toggleHost: (id: string, enabled: boolean) => invoke(IPC.hostsToggle, id, enabled),
+
+  // Ports availability
+  checkPort: (port: number) => invoke(IPC.portsCheck, port),
+  checkPorts: (ports: number[]) => invoke(IPC.portsCheckMany, ports),
+  listCommonPorts: () => invoke(IPC.portsCommon),
+
   // App
   quit: () => invoke(IPC.appQuit),
   minimize: () => invoke(IPC.appMinimize),

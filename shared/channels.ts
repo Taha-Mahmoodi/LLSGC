@@ -31,6 +31,17 @@ export const IPC = {
   firewallToggle: 'firewall:toggle',
   firewallRefresh: 'firewall:refresh',
 
+  // Hosts file
+  hostsList: 'hosts:list',
+  hostsSave: 'hosts:save',
+  hostsRemove: 'hosts:remove',
+  hostsToggle: 'hosts:toggle',
+
+  // Ports availability
+  portsCheck: 'ports:check',
+  portsCheckMany: 'ports:check-many',
+  portsCommon: 'ports:common',
+
   // Settings
   settingsGet: 'settings:get',
   settingsUpdate: 'settings:update',
