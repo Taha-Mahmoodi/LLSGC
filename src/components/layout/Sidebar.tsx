@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../lib/store';
 import { cn } from '../../lib/utils';
+import { Tooltip } from '../ui/Tooltip';
 
 export type ViewKey =
   | 'dashboard'
@@ -99,8 +100,14 @@ export function Sidebar({
   };
 
   return (
-    <aside className="flex h-full w-60 shrink-0 flex-col border-r border-border bg-bg-base/60 px-3 py-4">
-      <div className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-fg-subtle">
+    <aside
+      className={cn(
+        'flex h-full shrink-0 flex-col border-r border-border bg-bg-base/60 py-4 transition-all',
+        // Compact (icon-only) under lg, full width at lg+
+        'w-[60px] px-1.5 lg:w-60 lg:px-3',
+      )}
+    >
+      <div className="mb-2 hidden px-2 text-xs font-medium uppercase tracking-wider text-fg-subtle lg:block">
         Navigation
       </div>
       <nav className="flex flex-col gap-1">
@@ -108,20 +115,22 @@ export function Sidebar({
           const active = current === item.key;
           const Icon = item.icon;
           const badge = item.badge?.(counts);
-          return (
+          const button = (
             <button
               key={item.key}
               onClick={() => onChange(item.key)}
               className={cn(
-                'group flex items-center gap-3 rounded-lg px-2.5 py-2 text-left text-sm transition',
+                'group flex items-center gap-3 rounded-lg text-left text-sm transition',
+                'px-1.5 py-1.5 justify-center lg:justify-start lg:px-2.5 lg:py-2',
                 active
                   ? 'bg-bg-elev text-fg border border-border-strong shadow-soft'
                   : 'text-fg-muted hover:bg-bg-elev/60 hover:text-fg border border-transparent',
               )}
+              aria-label={item.label}
             >
               <div
                 className={cn(
-                  'flex h-7 w-7 items-center justify-center rounded-md',
+                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-md',
                   active
                     ? 'bg-accent/15 text-accent'
                     : 'bg-bg-panel text-fg-muted group-hover:text-fg',
@@ -129,20 +138,34 @@ export function Sidebar({
               >
                 <Icon className="h-4 w-4" strokeWidth={1.75} />
               </div>
-              <div className="flex flex-1 flex-col leading-tight">
-                <span className="font-medium">{item.label}</span>
-                <span className="text-[11px] text-fg-subtle">{item.description}</span>
+              <div className="hidden lg:flex flex-1 flex-col leading-tight min-w-0">
+                <span className="font-medium truncate">{item.label}</span>
+                <span className="truncate text-[11px] text-fg-subtle">
+                  {item.description}
+                </span>
               </div>
               {badge && (
-                <span className="rounded-md bg-bg-panel px-1.5 py-0.5 text-[10px] font-semibold text-fg-muted">
+                <span className="hidden lg:inline rounded-md bg-bg-panel px-1.5 py-0.5 text-[10px] font-semibold text-fg-muted">
+                  {badge}
+                </span>
+              )}
+              {badge && (
+                <span className="lg:hidden absolute mt-[-22px] ml-[18px] rounded-full bg-accent text-accent-fg px-1 text-[9px] font-bold leading-tight" aria-hidden>
                   {badge}
                 </span>
               )}
             </button>
           );
+          return (
+            <div key={item.key} className="relative">
+              <Tooltip content={`${item.label} — ${item.description}`} side="right">
+                {button}
+              </Tooltip>
+            </div>
+          );
         })}
       </nav>
-      <div className="mt-auto rounded-lg border border-border bg-bg-elev/50 p-3">
+      <div className="mt-auto hidden rounded-lg border border-border bg-bg-elev/50 p-3 lg:block">
         <div className="text-[11px] font-medium uppercase tracking-wider text-fg-subtle">
           Quick stats
         </div>

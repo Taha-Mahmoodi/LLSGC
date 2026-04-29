@@ -124,16 +124,71 @@ export function ServerDetailDrawer({
                 </Metric>
               </div>
 
-              <Section title="Endpoint">
-                {server.url && (
-                  <button
-                    onClick={() => api.openServer(server.url!)}
-                    className="flex w-full items-center justify-between rounded-md border border-border bg-bg-panel px-3 py-2 text-left text-sm hover:border-border-strong"
-                  >
-                    <span className="truncate font-mono">{server.url}</span>
-                    <Globe className="h-3.5 w-3.5 text-fg-muted" />
-                  </button>
-                )}
+              <Section
+                title={
+                  server.urls && server.urls.length > 1
+                    ? `Endpoints (${server.urls.length})`
+                    : 'Endpoint'
+                }
+              >
+                {(
+                  (server.urls && server.urls.length > 0
+                    ? server.urls
+                    : server.url
+                    ? [server.url]
+                    : []) as string[]
+                ).map((u: string) => {
+                  const host = (() => {
+                    try {
+                      return new URL(u).hostname;
+                    } catch {
+                      return u;
+                    }
+                  })();
+                  const tag =
+                    host === 'localhost' || host === '127.0.0.1'
+                      ? 'local'
+                      : host === '::1'
+                      ? 'local'
+                      : 'LAN';
+                  return (
+                    <div
+                      key={u}
+                      className="mb-1.5 flex items-center gap-1 rounded-md border border-border bg-bg-panel px-2 py-1.5 hover:border-border-strong"
+                    >
+                      <span
+                        className={
+                          tag === 'LAN'
+                            ? 'pill pill-warn shrink-0'
+                            : 'pill pill-running shrink-0'
+                        }
+                      >
+                        {tag}
+                      </span>
+                      <span
+                        className="min-w-0 flex-1 truncate font-mono text-[12px] cursor-pointer"
+                        title="Open in browser"
+                        onClick={() => api.openServer(u)}
+                      >
+                        {u}
+                      </span>
+                      <button
+                        onClick={() => callOk(api.copyText(u), 'URL copied')}
+                        className="row-action h-7 w-7"
+                        title="Copy"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => api.openServer(u)}
+                        className="row-action h-7 w-7"
+                        title="Open"
+                      >
+                        <Globe className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-fg-muted">
                   <div>
                     <div className="text-fg-subtle">Bind address</div>

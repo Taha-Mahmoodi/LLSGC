@@ -1,6 +1,6 @@
 {
   "name": "llsgc",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "private": true,
   "description": "Live Local Servers GUI Controller — full control over local dev servers, ports, and firewall.",
   "author": {

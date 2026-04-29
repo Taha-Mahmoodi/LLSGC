@@ -1,6 +1,14 @@
-import { useMemo } from 'react';
+import { useId, useMemo } from 'react';
 import { cn } from '../lib/utils';
 
+/**
+ * Responsive sparkline: SVG renders at width="100%" (fills its parent)
+ * while the path is computed in the original coordinate space defined
+ * by `width`. preserveAspectRatio="none" stretches the path to fit.
+ *
+ * Pass `responsive={false}` to render at a fixed pixel width — useful
+ * for tight rows where you want the sparkline to keep its native size.
+ */
 export function Sparkline({
   data,
   height = 36,
@@ -9,6 +17,7 @@ export function Sparkline({
   fill = true,
   className,
   max,
+  responsive = true,
 }: {
   data: number[];
   height?: number;
@@ -17,7 +26,10 @@ export function Sparkline({
   fill?: boolean;
   className?: string;
   max?: number;
+  responsive?: boolean;
 }) {
+  const gradientId = useId();
+
   const path = useMemo(() => {
     if (data.length < 2) return null;
     const peakRaw = max ?? Math.max(...data, 1);
@@ -36,19 +48,20 @@ export function Sparkline({
 
   return (
     <svg
-      width={width}
+      width={responsive ? '100%' : width}
       height={height}
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
-      className={cn('overflow-visible', className)}
+      className={cn('block max-w-full', className)}
+      style={{ height }}
     >
       <defs>
-        <linearGradient id="sparkFill" x1="0" x2="0" y1="0" y2="1">
+        <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity="0.35" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
-      {path && fill && <path d={path.area} fill="url(#sparkFill)" />}
+      {path && fill && <path d={path.area} fill={`url(#${gradientId})`} />}
       {path && (
         <path
           d={path.line}
@@ -57,6 +70,7 @@ export function Sparkline({
           strokeWidth={1.5}
           strokeLinecap="round"
           strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
         />
       )}
     </svg>

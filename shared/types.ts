@@ -19,8 +19,19 @@ export interface DetectedServer {
   memoryBytes: number;
   uptimeSec: number;
   startedAt: number;
+  /** Primary clickable URL — usually `http://localhost:<port>` */
   url?: string;
+  /** All reachable URLs: localhost + LAN + interface IPs when bound to 0.0.0.0 */
+  urls?: string[];
   customId?: string;
+}
+
+export interface LocalNetworkAddress {
+  family: 'IPv4' | 'IPv6';
+  address: string;
+  internal: boolean;
+  interface: string;
+  primary?: boolean;
 }
 
 export interface SystemStats {
@@ -39,6 +50,8 @@ export interface SystemStats {
   arch: string;
   hostname: string;
   release: string;
+  /** Local network addresses (IPv4 + IPv6, internal + external). */
+  network?: LocalNetworkAddress[];
 }
 
 export interface FirewallRule {

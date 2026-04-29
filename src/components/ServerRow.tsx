@@ -67,7 +67,7 @@ export function ServerRow({
       </div>
 
       <div className="min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="truncate text-sm font-medium">{server.name}</span>
           {custom && (
             <span className="pill pill-running">
@@ -81,10 +81,15 @@ export function ServerRow({
             />
             listening
           </span>
+          {server.urls && server.urls.length > 1 && (
+            <span className="pill pill-warn" title="Reachable on the local network too">
+              LAN +{server.urls.length - 1}
+            </span>
+          )}
         </div>
         <div className="mt-1 truncate font-mono text-[11px] text-fg-subtle">
-          {server.address}:{server.port} · {server.protocol.toUpperCase()} · pid {server.pid}
-          {server.command && ' · ' + shortenCommand(server.command, 80)}
+          {primaryDisplayUrl(server) ?? `${server.address}:${server.port}`} · {server.protocol.toUpperCase()} · pid {server.pid}
+          {server.command && ' · ' + shortenCommand(server.command, 60)}
         </div>
       </div>
 
@@ -146,6 +151,14 @@ export function ServerRow({
       </div>
     </div>
   );
+}
+
+function primaryDisplayUrl(server: DetectedServer): string | undefined {
+  if (server.urls && server.urls.length > 0) {
+    return server.urls[0].replace(/^https?:\/\//, '');
+  }
+  if (server.url) return server.url.replace(/^https?:\/\//, '');
+  return undefined;
 }
 
 export function ServerRowHeader() {

@@ -1,5 +1,6 @@
 import os from 'node:os';
 import { SystemStats } from '../../shared/types';
+import { getLocalAddresses } from './network-info';
 
 let prevCpuTimes: ReturnType<typeof os.cpus>[number]['times'][] | null = null;
 
@@ -27,6 +28,7 @@ export function getSystemStats(): SystemStats {
     arch: process.arch,
     hostname: os.hostname(),
     release: os.release(),
+    network: getLocalAddresses(),
   };
 }
 
