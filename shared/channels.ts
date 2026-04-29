@@ -42,6 +42,17 @@ export const IPC = {
   portsCheckMany: 'ports:check-many',
   portsCommon: 'ports:common',
 
+  // HTTP probe
+  serversProbe: 'servers:probe',
+
+  // Diagnostics
+  diagnosticsRun: 'diagnostics:run',
+
+  // Auto-update (desktop only — web ignores)
+  updateCheck: 'update:check',
+  updateApply: 'update:apply',
+  updateState: 'update:state',
+
   // Settings
   settingsGet: 'settings:get',
   settingsUpdate: 'settings:update',

@@ -3,6 +3,8 @@ import path from 'node:path';
 import { registerIpcHandlers, startTickLoop, stopTickLoop } from './ipc';
 import { customManager } from './services/custom-manager';
 import { initStore, store } from './services/store';
+import { initTray, destroyTray } from './services/tray';
+import { initUpdater, disposeUpdater } from './services/updater';
 
 // Point the shared store at Electron's userData dir before any other
 // service runs (some load lazily via require() at first tick).
@@ -87,10 +89,9 @@ function createWindow() {
 }
 
 app.on('window-all-closed', () => {
-  stopTickLoop();
-  customManager.shutdown();
-  store.flush();
-  if (process.platform !== 'darwin') app.quit();
+  // Don't quit when the window closes — Tray keeps the app alive in the
+  // background. Use the tray menu's "Quit" or app.quit() to actually exit.
+  // (macOS keeps app alive by default anyway.)
 });
 
 app.on('activate', () => {
@@ -99,6 +100,8 @@ app.on('activate', () => {
 
 app.on('before-quit', () => {
   stopTickLoop();
+  destroyTray();
+  disposeUpdater();
   customManager.shutdown();
   store.flush();
 });
@@ -108,4 +111,16 @@ app.whenReady().then(() => {
   createWindow();
   startTickLoop(getWindow);
   customManager.autoStartAll();
+  try {
+    initTray(getWindow);
+  } catch (err) {
+    console.error('[main] tray init failed', err);
+  }
+  if (app.isPackaged) {
+    try {
+      initUpdater(getWindow);
+    } catch (err) {
+      console.error('[main] updater init failed', err);
+    }
+  }
 });

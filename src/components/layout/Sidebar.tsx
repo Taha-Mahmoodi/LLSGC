@@ -7,6 +7,7 @@ import {
   Settings as SettingsIcon,
   Globe,
   Plug,
+  Stethoscope,
   type LucideIcon,
 } from 'lucide-react';
 import { useStore } from '../../lib/store';
@@ -21,6 +22,7 @@ export type ViewKey =
   | 'firewall'
   | 'hosts'
   | 'logs'
+  | 'diagnostics'
   | 'settings';
 
 const items: Array<{
@@ -74,6 +76,12 @@ const items: Array<{
     label: 'Logs',
     icon: ScrollText,
     description: 'Per-server output',
+  },
+  {
+    key: 'diagnostics',
+    label: 'Diagnostics',
+    icon: Stethoscope,
+    description: 'Health checks',
   },
   {
     key: 'settings',

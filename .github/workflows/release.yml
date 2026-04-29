@@ -184,7 +184,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish GitHub Release (desktop .exe + lite zip)
+      - name: Publish GitHub Release (desktop .exe + lite zip + auto-update feed)
         if: steps.version.outputs.is_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
@@ -197,5 +197,7 @@ jobs:
           files: |
             release/*.exe
             release/*-lite.zip
+            release/latest.yml
+            release/*.exe.blockmap
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

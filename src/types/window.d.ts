@@ -4,14 +4,17 @@ import type {
   CustomServer,
   CustomServerInput,
   DetectedServer,
+  DiagnosticsReport,
   FirewallRule,
   HostEntryInput,
   HostsInfo,
+  HttpProbeResult,
   IpcResult,
   LogLine,
   PortCheckResult,
   ProcessDetails,
   SystemStats,
+  UpdateState,
 } from '../../shared/types';
 
 export interface LLSGCApi {
@@ -57,6 +60,17 @@ export interface LLSGCApi {
   checkPort(port: number): Promise<IpcResult<PortCheckResult>>;
   checkPorts(ports: number[]): Promise<IpcResult<PortCheckResult[]>>;
   listCommonPorts(): Promise<IpcResult<CommonPort[]>>;
+
+  probeUrl(
+    url: string,
+    opts?: { timeoutMs?: number; method?: 'GET' | 'HEAD' },
+  ): Promise<IpcResult<HttpProbeResult>>;
+
+  runDiagnostics(): Promise<IpcResult<DiagnosticsReport>>;
+
+  checkForUpdates(): Promise<IpcResult<UpdateState>>;
+  applyUpdate(): Promise<IpcResult>;
+  onUpdateState(h: (state: UpdateState) => void): () => void;
 
   quit(): Promise<void>;
   minimize(): Promise<void>;

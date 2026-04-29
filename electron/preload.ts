@@ -57,6 +57,18 @@ const api = {
   checkPorts: (ports: number[]) => invoke(IPC.portsCheckMany, ports),
   listCommonPorts: () => invoke(IPC.portsCommon),
 
+  // HTTP probe
+  probeUrl: (url: string, opts?: { timeoutMs?: number; method?: 'GET' | 'HEAD' }) =>
+    invoke(IPC.serversProbe, url, opts),
+
+  // Diagnostics
+  runDiagnostics: () => invoke(IPC.diagnosticsRun),
+
+  // Auto-update (desktop only)
+  checkForUpdates: () => invoke(IPC.updateCheck),
+  applyUpdate: () => invoke(IPC.updateApply),
+  onUpdateState: (h: (state: any) => void) => listen(IPC.updateState, h),
+
   // App
   quit: () => invoke(IPC.appQuit),
   minimize: () => invoke(IPC.appMinimize),

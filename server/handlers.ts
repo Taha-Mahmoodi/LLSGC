@@ -35,6 +35,9 @@ import {
   checkPorts,
   listCommonPorts,
 } from '../electron/services/port-check';
+import { reachableUrls } from '../electron/services/network-info';
+import { probe } from '../electron/services/http-probe';
+import { runDiagnostics } from '../electron/services/diagnostics';
 
 const execAsync = promisify(exec);
 
@@ -202,6 +205,18 @@ export const handlers: Record<string, Handler> = {
 
   [IPC.portsCommon]: async (): Promise<IpcResult<any>> => ok(listCommonPorts()),
 
+  [IPC.serversProbe]: async (
+    url: string,
+    opts?: { timeoutMs?: number; method?: 'GET' | 'HEAD' },
+  ): Promise<IpcResult<any>> => {
+    if (!url || typeof url !== 'string') return fail('url is required');
+    return ok(await probe(url, opts));
+  },
+
+  [IPC.diagnosticsRun]: async (): Promise<IpcResult<any>> => {
+    return ok(await runDiagnostics());
+  },
+
   [IPC.appPlatform]: async (): Promise<IpcResult<{ platform: string; isWindows: boolean }>> => {
     return ok({ platform: process.platform, isWindows: process.platform === 'win32' });
   },
@@ -244,6 +259,7 @@ async function collectServers(): Promise<DetectedServer[]> {
       if (looksLikeSystemProcess(info?.name)) continue;
     }
     const startedAt = info?.startedAt ?? Date.now();
+    const urls = reachableUrls(port.address, port.port, port.protocol);
     out.push({
       pid: port.pid,
       name: info?.name ?? `pid:${port.pid}`,
@@ -256,7 +272,8 @@ async function collectServers(): Promise<DetectedServer[]> {
       memoryBytes: info?.memoryBytes ?? 0,
       uptimeSec: Math.max(0, (Date.now() - startedAt) / 1000),
       startedAt,
-      url: buildUrl(port.address, port.port, port.protocol),
+      url: urls[0] ?? buildUrl(port.address, port.port, port.protocol),
+      urls: urls.length > 0 ? urls : undefined,
       customId: custom?.id,
     });
   }

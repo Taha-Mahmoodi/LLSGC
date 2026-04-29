@@ -10,15 +10,24 @@ import {
   X,
   Clock,
   Hash,
+  Activity,
+  QrCode,
 } from 'lucide-react';
-import type { DetectedServer, ProcessDetails } from '../../shared/types';
+import type {
+  DetectedServer,
+  HttpProbeResult,
+  ProcessDetails,
+} from '../../shared/types';
 import { Sparkline } from './Sparkline';
+import { QrModal } from './QrModal';
 import { api, callOk } from '../lib/api';
 import { useStore } from '../lib/store';
 import {
+  cn,
   formatBytes,
   formatDuration,
   formatPercent,
+  isLikelyHttp,
   shortenCommand,
 } from '../lib/utils';
 
@@ -32,13 +41,24 @@ export function ServerDetailDrawer({
   onClose: () => void;
 }) {
   const [details, setDetails] = useState<ProcessDetails | null>(null);
+  const [probeResult, setProbeResult] = useState<HttpProbeResult | null>(null);
+  const [probing, setProbing] = useState(false);
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
   const pid = server?.pid;
   const history = useStore(s =>
     pid != null ? s.serverHistory.get(pid) ?? EMPTY_HISTORY : EMPTY_HISTORY,
   );
 
+  const runProbe = async (url: string) => {
+    setProbing(true);
+    const r = await api.probeUrl(url, { timeoutMs: 4000 });
+    if (r.ok && r.data) setProbeResult(r.data);
+    setProbing(false);
+  };
+
   useEffect(() => {
     setDetails(null);
+    setProbeResult(null);
     if (!server) return;
     let alive = true;
     api.serverDetails(server.pid).then(r => {
@@ -173,6 +193,13 @@ export function ServerDetailDrawer({
                         {u}
                       </span>
                       <button
+                        onClick={() => setQrUrl(u)}
+                        className="row-action h-7 w-7"
+                        title="QR code (scan from phone)"
+                      >
+                        <QrCode className="h-3.5 w-3.5" />
+                      </button>
+                      <button
                         onClick={() => callOk(api.copyText(u), 'URL copied')}
                         className="row-action h-7 w-7"
                         title="Copy"
@@ -200,6 +227,63 @@ export function ServerDetailDrawer({
                   </div>
                 </div>
               </Section>
+
+              {server.url && isLikelyHttp(server.port) && (
+                <Section title="HTTP probe">
+                  <div className="flex items-center gap-2">
+                    <button
+                      disabled={probing}
+                      onClick={() => runProbe(server.url!)}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-bg-panel px-3 py-1.5 text-xs hover:border-border-strong disabled:opacity-50"
+                    >
+                      <Activity className={cn('h-3.5 w-3.5', probing && 'animate-pulse')} />
+                      {probing ? 'Probing…' : probeResult ? 'Probe again' : 'Send GET request'}
+                    </button>
+                    {probeResult && (
+                      <span className="text-[11px] text-fg-subtle font-mono">
+                        {probeResult.durationMs} ms
+                      </span>
+                    )}
+                  </div>
+                  {probeResult && (
+                    <div
+                      className={cn(
+                        'mt-2 rounded-md border px-3 py-2 text-[11px] font-mono',
+                        probeResult.ok
+                          ? 'border-ok/30 bg-ok/5'
+                          : probeResult.error
+                          ? 'border-err/30 bg-err/5'
+                          : 'border-warn/30 bg-warn/5',
+                      )}
+                    >
+                      {probeResult.error ? (
+                        <div className="text-err break-all">
+                          <span className="font-semibold">Error:</span> {probeResult.error}
+                        </div>
+                      ) : (
+                        <>
+                          <div className={cn(probeResult.ok ? 'text-ok' : 'text-warn')}>
+                            <span className="font-semibold">{probeResult.status}</span>{' '}
+                            {probeResult.statusText}
+                          </div>
+                          {probeResult.contentType && (
+                            <div className="text-fg-muted mt-1">
+                              {probeResult.contentType}
+                              {probeResult.contentLength != null &&
+                                ` · ${formatBytes(probeResult.contentLength)}`}
+                            </div>
+                          )}
+                          {probeResult.redirected && probeResult.finalUrl && (
+                            <div className="text-fg-muted mt-1 break-all">
+                              → {probeResult.finalUrl}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </Section>
+              )}
 
               {(details?.command || server.command) && (
                 <Section title="Command line">
@@ -260,6 +344,7 @@ export function ServerDetailDrawer({
           </motion.aside>
         )}
       </AnimatePresence>
+      <QrModal open={!!qrUrl} url={qrUrl} onOpenChange={v => !v && setQrUrl(null)} />
     </>
   );
 }

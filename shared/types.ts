@@ -188,6 +188,65 @@ export interface IpcResult<T = void> {
   error?: string;
 }
 
+export interface HttpProbeResult {
+  url: string;
+  ok: boolean;
+  status?: number;
+  statusText?: string;
+  contentType?: string;
+  contentLength?: number;
+  durationMs: number;
+  error?: string;
+  redirected?: boolean;
+  finalUrl?: string;
+  headers?: Record<string, string>;
+  ts: number;
+}
+
+export type DiagnosticSeverity = 'ok' | 'warn' | 'error' | 'info';
+
+export interface DiagnosticResult {
+  id: string;
+  category: string;
+  title: string;
+  severity: DiagnosticSeverity;
+  message: string;
+  detail?: string;
+  fixHint?: string;
+  jumpTo?:
+    | 'dashboard'
+    | 'servers'
+    | 'ports'
+    | 'custom'
+    | 'firewall'
+    | 'hosts'
+    | 'logs'
+    | 'settings'
+    | 'diagnostics';
+}
+
+export interface DiagnosticsReport {
+  ranAt: number;
+  durationMs: number;
+  results: DiagnosticResult[];
+}
+
+export interface UpdateInfo {
+  version: string;
+  releaseDate?: string;
+  releaseNotes?: string;
+  url?: string;
+}
+
+export type UpdateState =
+  | { kind: 'idle' }
+  | { kind: 'checking' }
+  | { kind: 'available'; info: UpdateInfo }
+  | { kind: 'not-available'; current: string }
+  | { kind: 'downloading'; percent: number; bytesPerSecond?: number }
+  | { kind: 'downloaded'; info: UpdateInfo }
+  | { kind: 'error'; message: string };
+
 export interface ProcessDetails {
   pid: number;
   ppid?: number;

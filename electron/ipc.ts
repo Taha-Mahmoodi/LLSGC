@@ -37,6 +37,8 @@ import {
   checkPorts,
   listCommonPorts,
 } from './services/port-check';
+import { probe } from './services/http-probe';
+import { runDiagnostics } from './services/diagnostics';
 
 let tickHandle: NodeJS.Timeout | null = null;
 let lastInterval = 2500;
@@ -210,6 +212,59 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null) {
   });
 
   ipcMain.handle(IPC.portsCommon, async (): Promise<IpcResult<any>> => ok(listCommonPorts()));
+
+  ipcMain.handle(
+    IPC.serversProbe,
+    async (
+      _e,
+      url: string,
+      opts?: { timeoutMs?: number; method?: 'GET' | 'HEAD' },
+    ): Promise<IpcResult<any>> => {
+      if (!url || typeof url !== 'string') return fail('url is required');
+      return ok(await probe(url, opts));
+    },
+  );
+
+  ipcMain.handle(IPC.diagnosticsRun, async (): Promise<IpcResult<any>> => {
+    return ok(await runDiagnostics());
+  });
+
+  ipcMain.handle(IPC.updateCheck, async (): Promise<IpcResult<any>> => {
+    try {
+      const { checkForUpdatesNow } = await import('./services/updater');
+      return ok(await checkForUpdatesNow());
+    } catch (err) {
+      return fail(err);
+    }
+  });
+
+  ipcMain.handle(IPC.updateApply, async (): Promise<IpcResult> => {
+    try {
+      const { downloadAndInstall, quitAndInstall } = await import('./services/updater');
+      // If the update is already downloaded, install. Otherwise, kick off the download.
+      // We expose both behind a single button on the renderer: it sends "apply" and
+      // electron-updater either downloads-then-installs, or installs-now.
+      await downloadAndInstall();
+      // Don't auto-quitAndInstall here — wait until renderer confirms after seeing
+      // the "downloaded" state. But for simplicity we let the user click again.
+      return ok();
+    } catch (err) {
+      return fail(err);
+    }
+  });
+
+  // Bonus: a 'now-restart' style channel that immediately quits + installs.
+  // Reuses the same updateApply channel — second click after download triggers it.
+  // The renderer's UI handles the two-step flow.
+  ipcMain.handle('update:install-now', async (): Promise<IpcResult> => {
+    try {
+      const { quitAndInstall } = await import('./services/updater');
+      quitAndInstall();
+      return ok();
+    } catch (err) {
+      return fail(err);
+    }
+  });
 
   ipcMain.handle(IPC.appQuit, () => {
     app.quit();

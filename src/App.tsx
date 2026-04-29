@@ -4,6 +4,7 @@ import { Sidebar, type ViewKey } from './components/layout/Sidebar';
 import { ToastViewport } from './components/ui/Toast';
 import { TooltipProvider } from './components/ui/Tooltip';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { CommandPalette } from './components/CommandPalette';
 import { Dashboard } from './pages/Dashboard';
 import { Servers } from './pages/Servers';
 import { Ports } from './pages/Ports';
@@ -11,10 +12,12 @@ import { Custom } from './pages/Custom';
 import { Firewall } from './pages/Firewall';
 import { Hosts } from './pages/Hosts';
 import { Logs } from './pages/Logs';
+import { Diagnostics } from './pages/Diagnostics';
 import { Settings as SettingsPage } from './pages/Settings';
 import { api } from './lib/api';
 import { useStore } from './lib/store';
 import { cn } from './lib/utils';
+import type { UpdateState } from '../shared/types';
 
 export default function App() {
   const [view, setView] = useState<ViewKey>('dashboard');
@@ -22,11 +25,13 @@ export default function App() {
     () => new Set<ViewKey>(['dashboard']),
   );
 
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const setSystemStats = useStore(s => s.setSystemStats);
   const setServers = useStore(s => s.setServers);
   const setCustomServers = useStore(s => s.setCustomServers);
   const appendLog = useStore(s => s.appendLog);
   const setSettings = useStore(s => s.setSettings);
+  const pushToast = useStore(s => s.pushToast);
 
   const navigate = useCallback((next: ViewKey) => {
     setView(next);
@@ -58,14 +63,51 @@ export default function App() {
       }
     });
 
+    const offUpdate = api.onUpdateState((state: UpdateState) => {
+      if (state.kind === 'available') {
+        pushToast({
+          title: `Update available: v${state.info.version}`,
+          description: 'Click Settings to download. Or run "Diagnostics → Open settings" later.',
+          tone: 'info',
+        });
+      } else if (state.kind === 'downloaded') {
+        pushToast({
+          title: `Update v${state.info.version} ready`,
+          description: 'Restart the app from Settings to apply the update.',
+          tone: 'ok',
+        });
+      } else if (state.kind === 'error') {
+        // Silent — auto-update errors happen on flaky networks etc, don't spam.
+        console.warn('[updater]', state.message);
+      }
+    });
+
     return () => {
       cancelled = true;
       offSystem();
       offServers();
       offCustom();
       offLog();
+      offUpdate();
     };
-  }, [setSystemStats, setServers, setCustomServers, appendLog, setSettings]);
+  }, [setSystemStats, setServers, setCustomServers, appendLog, setSettings, pushToast]);
+
+  // Global Ctrl+K (Cmd+K on macOS) to open the command palette.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isInput = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA';
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen(true);
+      } else if (e.key === '/' && !isInput && !paletteOpen) {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [paletteOpen]);
 
   return (
     <TooltipProvider>
@@ -109,6 +151,11 @@ export default function App() {
               <Logs />
             </ErrorBoundary>
           </CachedPage>
+          <CachedPage active={view === 'diagnostics'} mounted={visited.has('diagnostics')}>
+            <ErrorBoundary scope="diagnostics">
+              <Diagnostics onJump={navigate} />
+            </ErrorBoundary>
+          </CachedPage>
           <CachedPage active={view === 'settings'} mounted={visited.has('settings')}>
             <ErrorBoundary scope="settings">
               <SettingsPage />
@@ -117,6 +164,11 @@ export default function App() {
         </main>
       </div>
       <ToastViewport />
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        onNavigate={navigate}
+      />
     </div>
     </TooltipProvider>
   );

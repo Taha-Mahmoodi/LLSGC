@@ -172,6 +172,17 @@ export const browserApi: LLSGCApi = {
   checkPorts: ports => invoke(IPC.portsCheckMany, ports),
   listCommonPorts: () => invoke(IPC.portsCommon),
 
+  probeUrl: (url, opts) => invoke(IPC.serversProbe, url, opts),
+  runDiagnostics: () => invoke(IPC.diagnosticsRun),
+
+  // No real auto-updater on the web — but provide stable no-ops so the
+  // shared renderer code doesn't have to branch.
+  checkForUpdates: async () => ({ ok: true, data: { kind: 'idle' } as const }),
+  applyUpdate: async () => ({ ok: false, error: 'Auto-update is desktop-only.' }),
+  onUpdateState: () => () => {
+    /* no-op */
+  },
+
   quit: async () => undefined,
   minimize: async () => undefined,
   maximize: async () => undefined,
